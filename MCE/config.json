@@ -1,9 +1,9 @@
 {
   "ResetDaily": true,
   "LastRun": "2023-11-07 20:51:54",
-  "ResetTime": "10:00:00",
+  "ResetTime": "11:22:33",
   "RechargeAP": true,
-  "PreferredTemplate": "template1",
+  "PreferredTemplate": "sss",
   "Queue": [],
   "Event": true,
   "Templates": {
@@ -58,6 +58,44 @@
         "30",
         30
       ]
-    ]
+    ],
+    "sss": [
+      [
+        "H",
+        "5-1",
+        3
+      ],
+      [
+        "H",
+        "5-3",
+        3
+      ],
+      [
+        "H",
+        "4-3",
+        3
+      ],
+      [
+        "H",
+        "3-3",
+        3
+      ],
+      [
+        "H",
+        "2-2",
+        3
+      ],
+      [
+        "H",
+        "1-1",
+        3
+      ],
+      [
+        "H",
+        "1-3",
+        3
+      ]
+    ],
+    "fbgfb": []
   }
 }

@@ -77,13 +77,10 @@ class Linker:
         self.config = None
         self.widgets = {}
         self.sidebar = None
-        self.name_to_sidebar_frame = {
-            "Template": None,
-            "Queue": None,
-            "Configuration":None
-        }
+        self.event_id = None
 
-    def show_notification(self, name):
-        new_notification = CTkNotification(text= f"{name} was saved successfully.", master=self.sidebar, fg_color="green")
-        new_notification.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.master.after(2500, new_notification.destroy)
+    def show_notification(self, text):
+        if self.event_id:
+            self.sidebar.after_cancel(self.event_id)
+        self.sidebar.notification.show()
+        self.event_id = self.sidebar.after(2500, self.sidebar.notification.hide)

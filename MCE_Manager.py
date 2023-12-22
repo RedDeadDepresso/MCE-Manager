@@ -7,11 +7,12 @@ from MCE.custom_widgets.ctk_tooltip import CTkToolTip
 from MCE.custom_widgets.ctk_timeentry import CTkTimeEntry
 from MCE.custom_widgets.ctk_integerspinbox import CTkIntegerSpinbox
 from MCE.custom_widgets.ctk_templatedialog import CTkTemplateDialog
+from MCE.custom_widgets.ctk_notification import CTkNotification
 from MCE.utils import Linker, Config
 
-class FarmingFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, linker, config, **kwargs):
-        super().__init__(master=master, **kwargs)
+class MCE_Manager(customtkinter.CTk):
+    def __init__(self, linker, config, **kwargs):
+        super().__init__(**kwargs)
         self.linker = linker
         self.config = config
         self.create_widgets()
@@ -63,6 +64,8 @@ class FarmingFrame(customtkinter.CTkScrollableFrame):
     def create_mission_commissions_checkbox(self):
         self.mission_commissions_checkbox = customtkinter.CTkLabel(self, text="Mission/Commissions/Event", width=60, font=customtkinter.CTkFont(family="Inter", size=20, weight="bold"))
         self.mission_commissions_checkbox.grid(row=11, column=0, sticky="nw", padx=20, pady=20)
+        self.notification = CTkNotification(master=self, text="Config saved")
+        self.notification.grid(row=11, column=1)
 
     # Helper method to create Reset Daily Widgets
     def create_reset_daily_widgets(self):
@@ -167,6 +170,7 @@ class FarmingFrame(customtkinter.CTkScrollableFrame):
     def create_frame_lists(self):
         self.template_frames = []
         self.queue_frames = []
+        self.highlighted_frame = None
 
     # Helper method to initialize Preferred Template and Templates List
     def initialize_preferred_template(self):
@@ -249,7 +253,7 @@ class FarmingFrame(customtkinter.CTkScrollableFrame):
         parent_frame = self.queue_frame if queue else self.template_frame
         row_index = len(frames) + 1  # Calculate the row for the new frame
         # Create a frame
-        frame = customtkinter.CTkFrame(parent_frame)
+        frame = tk.Frame(parent_frame, bg="gray17")
         frame.grid(row=row_index, column=0, columnspan=4, padx=10, pady=10, sticky="w")
         frames.append(frame)
         # "Up" button to move the frame up
@@ -277,6 +281,8 @@ class FarmingFrame(customtkinter.CTkScrollableFrame):
         # Delete button to delete the frame
         delete_button = customtkinter.CTkButton(frame, text="Delete", width=5, command=lambda f=frame, queue=queue: self.delete_frame(f, queue), state=state)
         delete_button.grid(row=0, column=5, padx=5, pady=5, sticky="w")
+
+        frame.bind("<Double-Button-1>", lambda event, f=frame: self.highlight_frame(f))
 
     # Function to clear all frames
     def clear_frames(self, queue=False):
@@ -353,14 +359,33 @@ class FarmingFrame(customtkinter.CTkScrollableFrame):
         # Update the positions of remaining frames
         self.update_frame_positions(queue=queue)
 
+    def highlight_frame(self, frame):
+        try:
+            if self.highlighted_frame is not None:
+                self.highlighted_frame.unbind("<Up>")
+                self.highlighted_frame.unbind("<Down>")
+                self.highlighted_frame.config(bg="gray17")
+        except:
+            pass
+        
+        if self.highlighted_frame == frame:
+            self.highlighted_frame = None
+            
+        else:
+            up_button = frame.winfo_children()[0]
+            down_button = frame.winfo_children()[1]
+            frame.config(bg="yellow")
+            frame.bind("<Up>", lambda event: up_button.invoke())
+            frame.bind("<Down>", lambda event: down_button.invoke())
+            frame.focus_set()
+            self.highlighted_frame = frame
+
+
 if __name__ == "__main__":
-    app = customtkinter.CTk()
     linker = Linker()
-    sidebar = customtkinter.CTkFrame(app)
-    linker.sidebar = sidebar
     config = Config(linker, "MCE\config.json")
-    farming = FarmingFrame(app, linker, config, width=600, height=800)
-    farming.grid(row=0,column=0, sticky="nsew")
-    sidebar.grid(row=0, column=1, sticky="nw")
+    app = MCE_Manager(linker, config)
+    app.title("MCE Manager")
+    linker.sidebar = app
     config.load_config()
     app.mainloop()
