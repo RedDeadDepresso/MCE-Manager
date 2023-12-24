@@ -9,6 +9,9 @@ from MCE.custom_widgets.ctk_integerspinbox import CTkIntegerSpinbox
 from MCE.custom_widgets.ctk_templatedialog import CTkTemplateDialog
 from MCE.custom_widgets.ctk_notification import CTkNotification
 from MCE.utils import Linker, Config
+from filelock import FileLock, Timeout
+import threading
+import time
 
 class MCE_Manager(customtkinter.CTk):
     def __init__(self, linker, config, **kwargs):
@@ -145,16 +148,19 @@ class MCE_Manager(customtkinter.CTk):
             self.template_buttons_frame = customtkinter.CTkFrame(i)
             self.template_buttons_frame.grid(row=3, column=0)
 
+            self.highlight_label = customtkinter.CTkLabel(self.template_buttons_frame, text="*You can double click an entry and press up or down arrow to change its position", font=customtkinter.CTkFont(family="Inter", size=12))
+            self.highlight_label.grid(row=0, column=0, columnspan=3)
+
             self.add_button = customtkinter.CTkButton(self.template_buttons_frame , text="Add", command=lambda queue=queue: self.add_frame(queue=queue))
-            self.add_button.grid(row=0, column=0, padx=5, pady=5)
+            self.add_button.grid(row=1, column=0, padx=5, pady=5)
 
             # Clear button to clear all frames
             self.clear_button = customtkinter.CTkButton(self.template_buttons_frame, text="Clear All", command=lambda queue=queue: self.clear_frames(queue=queue), fg_color="crimson")
-            self.clear_button.grid(row=0, column=1, padx=5, pady=5)
+            self.clear_button.grid(row=1, column=1, padx=5, pady=5)
 
             # Save button to save data
             self.save_button = customtkinter.CTkButton(self.template_buttons_frame, text="Save", command=lambda queue=queue: self.save_data(queue=queue), fg_color="#DC621D")
-            self.save_button.grid(row=0, column=2, padx=5, pady=5)
+            self.save_button.grid(row=1, column=2, padx=5, pady=5)
             if queue:
                 self.queue_buttons = [self.add_button, self.clear_button, self.save_button]
 
@@ -380,6 +386,34 @@ class MCE_Manager(customtkinter.CTk):
             frame.focus_set()
             self.highlighted_frame = frame
 
+    def check_lock(self):
+        while 1:
+            try:
+                lock = FileLock("MCE\config.json.lock")
+                lock.acquire(timeout=1)
+            except Timeout:
+                self.config.locked = True
+                self.switch_queue_state("disabled")
+            else:
+                lock.release()
+                self.switch_queue_state("normal")
+            finally:
+                time.sleep(2)
+
+    def switch_queue_state(self, state):
+        for button in self.queue_buttons:
+            button.configure(state=state)
+        self.update_queue()
+        for frame in self.queue_frames:
+            for widget in frame.winfo_children():
+                widget.configure(state=state)
+
+    def update_queue(self):
+        self.clear_frames(queue=True)
+        new_config_data = self.config.read()
+        self.config.config_data['Queue'] = new_config_data['Queue']
+        for entry in self.config.config_data['Queue']:
+            self.add_frame(entry, queue=True)
 
 if __name__ == "__main__":
     linker = Linker()
@@ -388,4 +422,6 @@ if __name__ == "__main__":
     app.title("MCE Manager")
     linker.sidebar = app
     config.load_config()
+    thread = threading.Thread(target=app.check_lock)
+    thread.start()
     app.mainloop()

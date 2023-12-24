@@ -9,6 +9,7 @@ class Config:
         self.config_file = config_file
         self.config_data = self.read()
         self.linker.widgets = self.set_values_to_none(self.config_data)
+        self.locked = False
         linker.config = self
 
     def read(self):
@@ -66,6 +67,11 @@ class Config:
         self.save_file("Configuration")
 
     def save_file(self, name=None):
+        if self.locked:
+            with open("MCE\config.json", "w") as config_file:
+                new_config = json.load(config_file)
+            self.config_data["Queue"] = new_config["Queue"]
+            self.config_data["LastRun"] = new_config["LastRun"]
         with open("MCE\config.json", "w") as config_file:
             json.dump(self.config_data, config_file, indent=2)
         if name:    
