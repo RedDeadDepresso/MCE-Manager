@@ -1,11 +1,17 @@
 {
   "ResetDaily": true,
-  "LastRun": "2023-11-07 20:51:54",
+  "LastRun": "2023-12-24 21:41:55",
   "ResetTime": "20:21:30",
   "RechargeAP": true,
-  "PreferredTemplate": "sss",
-  "Queue": [],
-  "Event": true,
+  "PreferredTemplate": "template1",
+  "Queue": [
+    [
+      "N",
+      "7-2",
+      4
+    ]
+  ],
+  "Event": false,
   "Templates": {
     "template1": [
       [
@@ -96,6 +102,28 @@
         3
       ]
     ],
-    "fbgfb": []
+    "fbgfb": [],
+    "commissions": [
+      [
+        "BD",
+        "01",
+        1
+      ],
+      [
+        "IR",
+        "01",
+        1
+      ],
+      [
+        "N",
+        "7-2",
+        1
+      ],
+      [
+        "H",
+        "6-4",
+        1
+      ]
+    ]
   }
 }

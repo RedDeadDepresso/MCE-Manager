@@ -392,29 +392,39 @@ class MCE_Manager(customtkinter.CTk):
                 lock = FileLock("MCE\config.json.lock")
                 lock.acquire(timeout=1)
             except Timeout:
-                self.config.locked = True
-                self.switch_queue_state("disabled")
+                if not self.config.locked:
+                    self.after(10, lambda : (self.queue_changed(), self.update_queue(), self.switch_queue_state("disabled")))
+                    self.config.locked = True
+                elif self.config.locked and self.queue_changed():
+                    self.after(10, lambda : (self.update_queue(), self.switch_queue_state("disabled")))
             else:
                 lock.release()
-                self.switch_queue_state("normal")
+                if self.config.locked:
+                    self.after(10, lambda : (self.queue_changed(), self.update_queue(), self.switch_queue_state("normal")))
+                    self.config.locked = False
             finally:
                 time.sleep(2)
 
     def switch_queue_state(self, state):
         for button in self.queue_buttons:
             button.configure(state=state)
-        self.update_queue()
         for frame in self.queue_frames:
             for widget in frame.winfo_children():
                 widget.configure(state=state)
 
     def update_queue(self):
         self.clear_frames(queue=True)
-        new_config_data = self.config.read()
-        self.config.config_data['Queue'] = new_config_data['Queue']
         for entry in self.config.config_data['Queue']:
             self.add_frame(entry, queue=True)
 
+    def queue_changed(self):
+        new_config_data = self.config.read()
+        changed = self.config.config_data["Queue"] != new_config_data["Queue"] or self.config.config_data["LastRun"] != new_config_data["LastRun"]
+        if changed:
+            self.config.config_data["LastRun"] = new_config_data["LastRun"]
+            self.config.config_data['Queue'] = new_config_data['Queue']
+        return changed
+        
 if __name__ == "__main__":
     linker = Linker()
     config = Config(linker, "MCE\config.json")
